@@ -1,16 +1,16 @@
 import { Component, OnInit, ElementRef, Input } from '@angular/core';
 import * as D3 from 'd3/index';
 
-
-export interface ITweets{
+export interface ITweets {
   tweets: ITweet[];
 }
 
-export interface ITweet{
+export interface ITweet {
   statuses_counts: any;
   following_counts: any;
   followers_counts: any;
 }
+
 @Component({
   selector: 'app-homepage',
   templateUrl: './homepage.component.html',
@@ -34,27 +34,22 @@ export class HomepageComponent implements OnInit {
   zScale: any ;
   twitterState: ITweets;
 
-
-
   constructor(private _element: ElementRef) {
     this.host = D3.select(this._element.nativeElement);
-    const tweet = {
-      followers_counts: 12,
-      following_counts: 21,
-      statuses_counts: 100
-    };
 
-    const tweet2 = {
-      followers_counts: 100,
-      following_counts: 11,
-      statuses_counts: 10000
-    };
-    this.twitterState = { tweets: [ tweet, tweet2] };
-   }
+    const tweets = Array.from(Array(120).keys()).map(() => {
+      return {
+        followers_counts: Math.floor(Math.random() * 80),
+        following_counts: Math.floor(Math.random() * 80),
+        statuses_counts: Math.floor(Math.random() * 230)
+      };
+    });
+
+    this.twitterState = { tweets };
+  }
 
   ngOnInit() {
-
-    this.streamContainer = this.host.append('div');    
+    this.streamContainer = this.host.append('div');
     this.setup();
     this.buildSVG();
     this.populate();
@@ -68,7 +63,7 @@ export class HomepageComponent implements OnInit {
       right: 50,
       bottom: 40,
       left: 50
-    }
+    };
     this.width = document.querySelector('#scatterplot').clientWidth - this.margin.left - this.margin.right;
     this.height = this.width * 0.6 - this.margin.bottom - this.margin.top;
     this.xScale = D3.scaleLinear().range([0, this.width]);
@@ -84,7 +79,6 @@ export class HomepageComponent implements OnInit {
     .style('background-color', 'white')
     .append('g')
     .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')')
-
   }
 
   drawXAxis() {
@@ -114,7 +108,7 @@ export class HomepageComponent implements OnInit {
       .append('text')
         .attr('class', 'label')
         .attr('transform', 'rotate(-90)')
-        .attr('y', -6)
+        .attr('y', 6)
         .attr('dy', '.71em')
         .style('text-anchor', 'end')
         .style('fill', 'grey')
@@ -133,41 +127,43 @@ export class HomepageComponent implements OnInit {
 
   getMaxY() {
     let following_counts = [];
-    if(this.twitterState.tweets) {
+    if (this.twitterState.tweets) {
       this.twitterState.tweets.forEach(tweet => {
         following_counts.push(tweet.following_counts);
       });
+
       return D3.max(following_counts);
     }
   }
 
   getMaxZ() {
     let statuses_counts = [];
-    if(this.twitterState.tweets) {
+    if (this.twitterState.tweets) {
       this.twitterState.tweets.forEach(tweet => {
         statuses_counts.push(tweet.statuses_counts);
       });
+
       return D3.max(statuses_counts);
     }
   }
 
   populate() {
-    if(this.twitterState.tweets) {
+    if (this.twitterState.tweets) {
       this.twitterState.tweets.forEach( () => {
         this.xScale.domain([0, this.getMaxX()]);
         this.yScale.domain([0, this.getMaxY()]);
         this.zScale.domain([0, this.getMaxZ()]);
       });
+
       this.svg.selectAll('.dot')
         .data(this.twitterState.tweets)
         .enter().append('circle')
           .attr('class', 'dot')
-          .attr('r', (d) => this.zScale(d.statuses_count))
-          .attr('cx', (d) => this.xScale(d.followers_count))
-          .attr('cy', (d) => this.yScale(d.following_count))
+          .attr('r', (d) => this.zScale(d.statuses_counts))
+          .attr('cx', (d) => this.xScale(d.followers_counts))
+          .attr('cy', (d) => this.yScale(d.following_counts))
           .style('fill', 'blue')
-          .style('opacity', 0.4)
-
+          .style('opacity', 0.4);
     }
   }
 }
